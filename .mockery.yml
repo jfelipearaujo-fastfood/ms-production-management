@@ -1,0 +1,16 @@
+with-expecter: false
+packages:
+    github.com/jfelipearaujo-org/ms-production-management/internal/environment:
+        config:
+          filename: "{{ .InterfaceName | snakecase }}_mock.go"
+          dir: "./internal/environment/mocks"
+          mockname: "Mock{{.InterfaceName}}"
+          outpkg: "mocks"
+          include-regex: "(Environment)"
+    github.com/jfelipearaujo-org/ms-production-management/internal/repository:
+        config:
+          filename: "{{ .InterfaceName | snakecase }}_mock.go"
+          dir: "./internal/repository/mocks"
+          mockname: "Mock{{.InterfaceName}}"
+          outpkg: "mocks"
+          include-regex: "(Repository)"
