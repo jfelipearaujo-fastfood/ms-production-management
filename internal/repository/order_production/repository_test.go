@@ -41,7 +41,8 @@ func TestCreate(t *testing.T) {
 			"Item",
 			1,
 		)
-		order.AddItem(orderItem, time.Now())
+		err = order.AddItem(orderItem, time.Now())
+		assert.NoError(t, err)
 
 		// Act
 		err = repo.Create(ctx, &order)
@@ -72,7 +73,8 @@ func TestCreate(t *testing.T) {
 			"Item",
 			1,
 		)
-		order.AddItem(orderItem, time.Now())
+		err = order.AddItem(orderItem, time.Now())
+		assert.NoError(t, err)
 
 		// Act
 		err = repo.Create(ctx, &order)
@@ -107,7 +109,8 @@ func TestCreate(t *testing.T) {
 			"Item",
 			1,
 		)
-		order.AddItem(orderItem, time.Now())
+		err = order.AddItem(orderItem, time.Now())
+		assert.NoError(t, err)
 
 		// Act
 		err = repo.Create(ctx, &order)
@@ -145,7 +148,8 @@ func TestCreate(t *testing.T) {
 			"Item",
 			1,
 		)
-		order.AddItem(orderItem, time.Now())
+		err = order.AddItem(orderItem, time.Now())
+		assert.NoError(t, err)
 
 		// Act
 		err = repo.Create(ctx, &order)

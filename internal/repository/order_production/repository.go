@@ -43,7 +43,10 @@ func (r *OrderProductionRepository) Create(ctx context.Context, order *order_ent
 
 	_, err = tx.ExecContext(ctx, sql, params...)
 	if err != nil {
-		tx.Rollback()
+		errTx := tx.Rollback()
+		if errTx != nil {
+			return errTx
+		}
 		return err
 	}
 
@@ -66,7 +69,10 @@ func (r *OrderProductionRepository) Create(ctx context.Context, order *order_ent
 
 		_, err = tx.ExecContext(ctx, sql, params...)
 		if err != nil {
-			tx.Rollback()
+			errTx := tx.Rollback()
+			if errTx != nil {
+				return errTx
+			}
 			return err
 		}
 	}
