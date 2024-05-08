@@ -17,7 +17,6 @@ func TestNewOrderState(t *testing.T) {
 			{"Processing", Processing},
 			{"Completed", Completed},
 			{"Delivered", Delivered},
-			{"Cancelled", Cancelled},
 		}
 
 		for _, c := range cases {

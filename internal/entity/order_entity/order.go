@@ -3,7 +3,6 @@ package order_entity
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/shared/custom_error"
 )
 
@@ -20,9 +19,9 @@ type Order struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func NewOrder(customerID string, now time.Time) Order {
+func NewOrder(orderID string, now time.Time) Order {
 	return Order{
-		Id: uuid.NewString(),
+		Id: orderID,
 
 		State:          Received,
 		StateUpdatedAt: now,

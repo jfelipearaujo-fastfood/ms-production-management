@@ -26,7 +26,6 @@ func NewOrderState(title string) OrderState {
 		"Processing": Processing,
 		"Completed":  Completed,
 		"Delivered":  Delivered,
-		"Cancelled":  Cancelled,
 	}[title]
 	if !ok {
 		return None
