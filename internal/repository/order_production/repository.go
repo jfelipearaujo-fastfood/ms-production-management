@@ -78,6 +78,8 @@ func (r *OrderProductionRepository) Create(ctx context.Context, order *order_ent
 		}
 	}
 
+	order.UpdateTimezone()
+
 	return tx.Commit()
 }
 
@@ -116,6 +118,8 @@ func (r *OrderProductionRepository) GetByID(ctx context.Context, id string) (ord
 	if order.Id == "" {
 		return order_entity.Order{}, custom_error.ErrOrderNotFound
 	}
+
+	order.UpdateTimezone()
 
 	sql, params, err = goqu.
 		From("order_items").
@@ -181,6 +185,7 @@ func (r *OrderProductionRepository) GetByState(ctx context.Context, state order_
 			return orders, err
 		}
 
+		order.UpdateTimezone()
 		order.RefreshStateTitle()
 
 		orders = append(orders, order)
@@ -207,6 +212,8 @@ func (r *OrderProductionRepository) Update(ctx context.Context, order *order_ent
 	if err != nil {
 		return err
 	}
+
+	order.UpdateTimezone()
 
 	return nil
 }

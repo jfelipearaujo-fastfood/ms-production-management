@@ -13,7 +13,7 @@ if [ $? -eq 0 ]; then
     echo "Sending a message..."
 
     message='{
-        "order_id": "c3fdab1b-3c06-4db2-9edc-4760a2429460",
+        "order_id": "c3fdab1b-3c06-4db2-9edc-4760a2429462",
         "items": [
             {
                 "id": "cfdab175-1f86-4fb0-9bcb-15f2c58df30c",

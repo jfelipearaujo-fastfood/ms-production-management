@@ -5,9 +5,17 @@ GET {{host}}/health
 Content-Type: application/json
 
 ### Get order production by ID
-GET {{host}}/api/v1/production/c3fdab1b-3c06-4db2-9edc-4760a2429460
+GET {{host}}/api/v1/production/c3fdab1b-3c06-4db2-9edc-4760a2429462
 Content-Type: application/json
 
 ### Get order production by state
 GET {{host}}/api/v1/production?state=Received
 Content-Type: application/json
+
+### Update order production by ID
+PATCH {{host}}/api/v1/production/c3fdab1b-3c06-4db2-9edc-4760a2429460
+Content-Type: application/json
+
+{
+    "state": "Delivered"
+}

@@ -88,7 +88,7 @@ func TestOrder(t *testing.T) {
 		err := order.UpdateState(Received, now)
 
 		// Assert
-		assert.NoError(t, err)
+		assert.Error(t, err)
 		assert.Equal(t, Received, order.State)
 		assert.Equal(t, past, order.StateUpdatedAt)
 		assert.Equal(t, past, order.UpdatedAt)
@@ -175,5 +175,23 @@ func TestOrder(t *testing.T) {
 
 		// Assert
 		assert.True(t, res)
+	})
+
+	t.Run("Should return date & time in correct timezone", func(t *testing.T) {
+		// Arrange
+		now := time.Now()
+
+		order := NewOrder("customer_id", now)
+
+		loc, err := time.LoadLocation("America/Sao_Paulo")
+		assert.NoError(t, err)
+
+		// Act
+		order.UpdateTimezone()
+
+		// Assert
+		assert.Equal(t, now.In(loc), order.CreatedAt)
+		assert.Equal(t, now.In(loc), order.UpdatedAt)
+		assert.Equal(t, now.In(loc), order.StateUpdatedAt)
 	})
 }
