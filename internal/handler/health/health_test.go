@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/jfelipearaujo-org/ms-order-management/internal/adapter/database/mocks"
-	"github.com/jfelipearaujo-org/ms-order-management/internal/shared/health"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/adapter/database/mocks"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/shared/health"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 )
