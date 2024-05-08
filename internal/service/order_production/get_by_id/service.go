@@ -29,5 +29,7 @@ func (s *Service) Handle(ctx context.Context, request GetOrderProductionByIdInpu
 		return order_entity.Order{}, err
 	}
 
+	order.RefreshStateTitle()
+
 	return order, nil
 }

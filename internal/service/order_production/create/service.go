@@ -6,6 +6,7 @@ import (
 	"github.com/jfelipearaujo-org/ms-production-management/internal/entity/order_entity"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/provider"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/repository"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/shared/custom_error"
 )
 
 type Service struct {
@@ -26,6 +27,15 @@ func NewService(
 func (s *Service) Handle(ctx context.Context, request CreateOrderProductionInput) (*order_entity.Order, error) {
 	if err := request.Validate(); err != nil {
 		return nil, err
+	}
+
+	exists, err := s.repository.GetByID(ctx, request.OrderId)
+	if err != nil && err != custom_error.ErrOrderNotFound {
+		return nil, err
+	}
+
+	if exists.Exists() {
+		return nil, custom_error.ErrOrderAlreadyExists
 	}
 
 	order := order_entity.NewOrder(request.OrderId, s.timeProvider.GetTime())

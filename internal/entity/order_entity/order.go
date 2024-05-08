@@ -74,3 +74,7 @@ func (o *Order) IsCompleted() bool {
 func (o *Order) HasItems() bool {
 	return len(o.Items) > 0
 }
+
+func (o *Order) Exists() bool {
+	return o.Id != ""
+}
