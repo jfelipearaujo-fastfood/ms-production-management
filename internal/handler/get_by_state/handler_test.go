@@ -1,4 +1,4 @@
-package get_by_id
+package get_by_state
 
 import (
 	"bytes"
@@ -7,10 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/entity/order_entity"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/service/mocks"
-	"github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_id"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_state"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/shared/custom_error"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
@@ -20,16 +19,14 @@ import (
 func TestHandle(t *testing.T) {
 	t.Run("Should return the order by id", func(t *testing.T) {
 		// Arrange
-		service := mocks.NewMockGetOrderProductionByIdService[get_by_id.GetOrderProductionByIdInput](t)
+		service := mocks.NewMockGetOrderProductionByStateService[get_by_state.GetOrderProductionByStateInput](t)
 
 		service.On("Handle", mock.Anything, mock.Anything).
-			Return(order_entity.Order{
-				Id: uuid.NewString(),
-			}, nil).
+			Return([]order_entity.Order{}, nil).
 			Once()
 
-		reqBody := get_by_id.GetOrderProductionByIdInput{
-			OrderId: uuid.NewString(),
+		reqBody := get_by_state.GetOrderProductionByStateInput{
+			State: "Received",
 		}
 
 		body, err := json.Marshal(reqBody)
@@ -42,9 +39,7 @@ func TestHandle(t *testing.T) {
 
 		e := echo.New()
 		ctx := e.NewContext(req, resp)
-		ctx.SetPath("/production/:id")
-		ctx.SetParamNames("id")
-		ctx.SetParamValues(uuid.NewString())
+		ctx.SetPath("/production?state=Received")
 
 		handler := NewHandler(service)
 
@@ -59,14 +54,14 @@ func TestHandle(t *testing.T) {
 
 	t.Run("Should return not found error", func(t *testing.T) {
 		// Arrange
-		service := mocks.NewMockGetOrderProductionByIdService[get_by_id.GetOrderProductionByIdInput](t)
+		service := mocks.NewMockGetOrderProductionByStateService[get_by_state.GetOrderProductionByStateInput](t)
 
 		service.On("Handle", mock.Anything, mock.Anything).
-			Return(order_entity.Order{}, custom_error.ErrOrderNotFound).
+			Return([]order_entity.Order{}, custom_error.ErrOrderNotFound).
 			Once()
 
-		reqBody := get_by_id.GetOrderProductionByIdInput{
-			OrderId: uuid.NewString(),
+		reqBody := get_by_state.GetOrderProductionByStateInput{
+			State: "Received",
 		}
 
 		body, err := json.Marshal(reqBody)
@@ -79,9 +74,7 @@ func TestHandle(t *testing.T) {
 
 		e := echo.New()
 		ctx := e.NewContext(req, resp)
-		ctx.SetPath("/production/:id")
-		ctx.SetParamNames("id")
-		ctx.SetParamValues(uuid.NewString())
+		ctx.SetPath("/production?state=Received")
 
 		handler := NewHandler(service)
 
@@ -106,14 +99,14 @@ func TestHandle(t *testing.T) {
 
 	t.Run("Should return internal server error", func(t *testing.T) {
 		// Arrange
-		service := mocks.NewMockGetOrderProductionByIdService[get_by_id.GetOrderProductionByIdInput](t)
+		service := mocks.NewMockGetOrderProductionByStateService[get_by_state.GetOrderProductionByStateInput](t)
 
 		service.On("Handle", mock.Anything, mock.Anything).
-			Return(order_entity.Order{}, assert.AnError).
+			Return([]order_entity.Order{}, assert.AnError).
 			Once()
 
-		reqBody := get_by_id.GetOrderProductionByIdInput{
-			OrderId: uuid.NewString(),
+		reqBody := get_by_state.GetOrderProductionByStateInput{
+			State: "Received",
 		}
 
 		body, err := json.Marshal(reqBody)
@@ -126,9 +119,7 @@ func TestHandle(t *testing.T) {
 
 		e := echo.New()
 		ctx := e.NewContext(req, resp)
-		ctx.SetPath("/production/:id")
-		ctx.SetParamNames("id")
-		ctx.SetParamValues(uuid.NewString())
+		ctx.SetPath("/production?state=Received")
 
 		handler := NewHandler(service)
 

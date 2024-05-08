@@ -12,11 +12,13 @@ import (
 	"github.com/jfelipearaujo-org/ms-production-management/internal/adapter/database"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/environment"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/handler/get_by_id"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/handler/get_by_state"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/handler/health"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/provider/time_provider"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/repository/order_production"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/create"
 	get_by_id_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_id"
+	get_by_state_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_state"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -53,9 +55,12 @@ func NewServer(config *environment.Config) *Server {
 		DatabaseService: databaseService,
 		QueueService:    cloud.NewQueueService(config.CloudConfig.OrderProductionQueue, cloudConfig, createOrderProductionService),
 		Dependency: Dependency{
-			TimeProvider:              timeProvider,
+			TimeProvider: timeProvider,
+
 			OrderProductionRepository: orderProductionRepository,
+
 			GetOrderProductionById:    get_by_id_service.NewService(orderProductionRepository),
+			GetOrderProductionByState: get_by_state_service.NewService(orderProductionRepository),
 		},
 	}
 }
@@ -91,6 +96,8 @@ func (server *Server) registerHealthCheck(e *echo.Echo) {
 
 func (s *Server) registerOrderProductionHandlers(e *echo.Group) {
 	getOrderProductionByIdHandler := get_by_id.NewHandler(s.Dependency.GetOrderProductionById)
+	getOrderProductionByStateHandler := get_by_state.NewHandler(s.Dependency.GetOrderProductionByState)
 
 	e.GET("/production/:id", getOrderProductionByIdHandler.Handle)
+	e.GET("/production", getOrderProductionByStateHandler.Handle)
 }

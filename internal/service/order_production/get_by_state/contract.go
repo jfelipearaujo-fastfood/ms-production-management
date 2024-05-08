@@ -7,7 +7,7 @@ import (
 )
 
 type GetOrderProductionByStateInput struct {
-	State string `json:"state" validate:"required"`
+	State string `query:"state" json:"state" validate:"required"`
 }
 
 func (input *GetOrderProductionByStateInput) Validate() error {

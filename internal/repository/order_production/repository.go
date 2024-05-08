@@ -181,6 +181,8 @@ func (r *OrderProductionRepository) GetByState(ctx context.Context, state order_
 			return orders, err
 		}
 
+		order.RefreshStateTitle()
+
 		orders = append(orders, order)
 	}
 
