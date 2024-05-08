@@ -27,7 +27,7 @@ func (r *OrderProductionRepository) Create(ctx context.Context, order *order_ent
 
 	sql, params, err := goqu.
 		Insert("orders").
-		Cols("id", "state", "state_updated_at", "created_at", "updated_at").
+		Cols("order_id", "state", "state_updated_at", "created_at", "updated_at").
 		Vals(
 			goqu.Vals{
 				order.Id,
@@ -88,8 +88,8 @@ func (r *OrderProductionRepository) GetByID(ctx context.Context, id string) (ord
 
 	sql, params, err := goqu.
 		From("orders").
-		Select("id", "state", "state_updated_at", "created_at", "updated_at").
-		Where(goqu.C("id").Eq(id)).
+		Select("order_id", "state", "state_updated_at", "created_at", "updated_at").
+		Where(goqu.C("order_id").Eq(id)).
 		ToSQL()
 	if err != nil {
 		return order_entity.Order{}, err
@@ -154,7 +154,7 @@ func (r *OrderProductionRepository) GetByState(ctx context.Context, state order_
 
 	sql, params, err := goqu.
 		From("orders").
-		Select("id", "state", "state_updated_at", "created_at", "updated_at").
+		Select("order_id", "state", "state_updated_at", "created_at", "updated_at").
 		Where(goqu.C("state").Eq(state)).
 		Order(goqu.C("created_at").Desc()).
 		ToSQL()
@@ -195,7 +195,7 @@ func (r *OrderProductionRepository) Update(ctx context.Context, order *order_ent
 			"state_updated_at": order.StateUpdatedAt,
 			"updated_at":       order.UpdatedAt,
 		}).
-		Where(goqu.C("id").Eq(order.Id)).
+		Where(goqu.C("order_id").Eq(order.Id)).
 		ToSQL()
 	if err != nil {
 		return err

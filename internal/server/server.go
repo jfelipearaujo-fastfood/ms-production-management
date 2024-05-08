@@ -1,15 +1,22 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/adapter/cloud"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/adapter/database"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/environment"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/handler/get_by_id"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/handler/health"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/provider/time_provider"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/repository/order_production"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/create"
+	get_by_id_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_id"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -17,22 +24,38 @@ import (
 type Server struct {
 	Config          *environment.Config
 	DatabaseService database.DatabaseService
+	QueueService    cloud.QueueService
 
 	Dependency Dependency
 }
 
 func NewServer(config *environment.Config) *Server {
+	ctx := context.Background()
+
+	cloudConfig, err := awsConfig.LoadDefaultConfig(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	if config.CloudConfig.IsBaseEndpointSet() {
+		cloudConfig.BaseEndpoint = aws.String(config.CloudConfig.BaseEndpoint)
+	}
+
 	databaseService := database.NewDatabase(config)
 
 	timeProvider := time_provider.NewTimeProvider(time.Now)
 	orderProductionRepository := order_production.NewOrderProductionRepository(databaseService.GetInstance())
 
+	createOrderProductionService := create.NewService(orderProductionRepository, timeProvider)
+
 	return &Server{
 		Config:          config,
 		DatabaseService: databaseService,
+		QueueService:    cloud.NewQueueService(config.CloudConfig.OrderProductionQueue, cloudConfig, createOrderProductionService),
 		Dependency: Dependency{
 			TimeProvider:              timeProvider,
 			OrderProductionRepository: orderProductionRepository,
+			GetOrderProductionById:    get_by_id_service.NewService(orderProductionRepository),
 		},
 	}
 }
@@ -53,6 +76,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	s.registerHealthCheck(e)
 
+	group := e.Group(fmt.Sprintf("/api/%s", s.Config.ApiConfig.ApiVersion))
+
+	s.registerOrderProductionHandlers(group)
+
 	return e
 }
 
@@ -60,4 +87,10 @@ func (server *Server) registerHealthCheck(e *echo.Echo) {
 	healthHandler := health.NewHandler(server.DatabaseService)
 
 	e.GET("/health", healthHandler.Handle)
+}
+
+func (s *Server) registerOrderProductionHandlers(e *echo.Group) {
+	getOrderProductionByIdHandler := get_by_id.NewHandler(s.Dependency.GetOrderProductionById)
+
+	e.GET("/production/:id", getOrderProductionByIdHandler.Handle)
 }

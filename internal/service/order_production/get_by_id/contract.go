@@ -6,7 +6,7 @@ import (
 )
 
 type GetOrderProductionByIdInput struct {
-	OrderId string `json:"order_id" validate:"required,uuid4"`
+	OrderId string `param:"id" json:"order_id" validate:"required,uuid4"`
 }
 
 func (input *GetOrderProductionByIdInput) Validate() error {
