@@ -17,9 +17,8 @@ func cleanEnv() {
 		"API_VERSION",
 		"DB_URL",
 		"AWS_BASE_ENDPOINT",
-		"AWS_ORDER_PRODUCTION_TOPIC_NAME",
+		"AWS_ORDER_PRODUCTION_QUEUE_NAME",
 		"AWS_UPDATE_ORDER_TOPIC_NAME",
-		"AWS_ORDER_PAYMENT_QUEUE_NAME",
 	}
 
 	for _, env := range envs {
@@ -39,9 +38,8 @@ func TestGetEnvironment(t *testing.T) {
 			{"API_VERSION", "v1"},
 			{"DB_URL", "db://host:1234"},
 			{"AWS_BASE_ENDPOINT", "http://localhost:4566"},
-			{"AWS_ORDER_PRODUCTION_TOPIC_NAME", "order_payment"},
+			{"AWS_ORDER_PRODUCTION_QUEUE_NAME", "order_production"},
 			{"AWS_UPDATE_ORDER_TOPIC_NAME", "update_order"},
-			{"AWS_ORDER_PAYMENT_QUEUE_NAME", "order_payment"},
 		}
 
 		for _, env := range envs {
@@ -58,10 +56,9 @@ func TestGetEnvironment(t *testing.T) {
 				Url: "db://host:1234",
 			},
 			CloudConfig: &environment.CloudConfig{
-				OrderProductionTopic: "order_payment",
-				UpdateOrderTopic:     "update_order",
-				OrderPaymentQueue:    "order_payment",
 				BaseEndpoint:         "http://localhost:4566",
+				OrderProductionQueue: "order_production",
+				UpdateOrderTopic:     "update_order",
 			},
 		}
 
@@ -85,8 +82,7 @@ func TestGetEnvironment(t *testing.T) {
 			{"API_VERSION", "v1"},
 			{"DB_URL", "db://host:1234"},
 			{"AWS_BASE_ENDPOINT", "http://localhost:4566"},
-			{"AWS_ORDER_PRODUCTION_TOPIC_NAME", "order_payment"},
-			{"AWS_ORDER_PAYMENT_QUEUE_NAME", "order_payment"},
+			{"AWS_ORDER_PRODUCTION_QUEUE_NAME", "order_payment"},
 		}
 
 		for _, env := range envs {
@@ -117,10 +113,9 @@ func TestGetEnvironmentFromFile(t *testing.T) {
 				Url: "db://host:1234",
 			},
 			CloudConfig: &environment.CloudConfig{
-				OrderProductionTopic: "order_payment",
-				UpdateOrderTopic:     "update_order",
-				OrderPaymentQueue:    "order_payment",
 				BaseEndpoint:         "http://localhost:4566",
+				OrderProductionQueue: "order_production",
+				UpdateOrderTopic:     "update_order",
 			},
 		}
 

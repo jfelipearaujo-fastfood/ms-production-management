@@ -19,9 +19,8 @@ type DatabaseConfig struct {
 }
 
 type CloudConfig struct {
-	OrderProductionTopic string `env:"ORDER_PRODUCTION_TOPIC_NAME, required"`
+	OrderProductionQueue string `env:"ORDER_PRODUCTION_QUEUE_NAME, required"`
 	UpdateOrderTopic     string `env:"UPDATE_ORDER_TOPIC_NAME, required"`
-	OrderPaymentQueue    string `env:"ORDER_PAYMENT_QUEUE_NAME, required"`
 
 	BaseEndpoint string `env:"BASE_ENDPOINT"`
 }
