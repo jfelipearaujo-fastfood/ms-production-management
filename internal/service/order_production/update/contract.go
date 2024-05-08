@@ -7,7 +7,7 @@ import (
 )
 
 type UpdateOrderProductionInput struct {
-	OrderId string `json:"order_id" validate:"required,uuid4"`
+	OrderId string `param:"id" json:"order_id" validate:"required,uuid4"`
 
 	State string `json:"state" validate:"required"`
 }

@@ -88,7 +88,7 @@ func TestOrder(t *testing.T) {
 		err := order.UpdateState(Received, now)
 
 		// Assert
-		assert.NoError(t, err)
+		assert.Error(t, err)
 		assert.Equal(t, Received, order.State)
 		assert.Equal(t, past, order.StateUpdatedAt)
 		assert.Equal(t, past, order.UpdatedAt)

@@ -4,9 +4,9 @@ DROP TABLE IF EXISTS order_items;
 CREATE TABLE IF NOT EXISTS orders (
     order_id varchar(255) NOT NULL UNIQUE,
     state INT,
-    state_updated_at TIMESTAMP,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP,
+    state_updated_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE,
+    updated_at TIMESTAMP WITH TIME ZONE,
     PRIMARY KEY (order_id)
 );
 

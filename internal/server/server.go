@@ -14,11 +14,13 @@ import (
 	"github.com/jfelipearaujo-org/ms-production-management/internal/handler/get_by_id"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/handler/get_by_state"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/handler/health"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/handler/update"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/provider/time_provider"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/repository/order_production"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/create"
 	get_by_id_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_id"
 	get_by_state_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_state"
+	update_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/update"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -61,6 +63,7 @@ func NewServer(config *environment.Config) *Server {
 
 			GetOrderProductionById:    get_by_id_service.NewService(orderProductionRepository),
 			GetOrderProductionByState: get_by_state_service.NewService(orderProductionRepository),
+			UpdateOrderProduction:     update_service.NewService(orderProductionRepository, timeProvider),
 		},
 	}
 }
@@ -97,7 +100,9 @@ func (server *Server) registerHealthCheck(e *echo.Echo) {
 func (s *Server) registerOrderProductionHandlers(e *echo.Group) {
 	getOrderProductionByIdHandler := get_by_id.NewHandler(s.Dependency.GetOrderProductionById)
 	getOrderProductionByStateHandler := get_by_state.NewHandler(s.Dependency.GetOrderProductionByState)
+	updateOrderProductionHandler := update.NewHandler(s.Dependency.UpdateOrderProduction)
 
 	e.GET("/production/:id", getOrderProductionByIdHandler.Handle)
 	e.GET("/production", getOrderProductionByStateHandler.Handle)
+	e.PATCH("/production/:id", updateOrderProductionHandler.Handle)
 }

@@ -48,7 +48,7 @@ func (o *Order) AddItem(item Item, now time.Time) error {
 
 func (o *Order) UpdateState(toState OrderState, now time.Time) error {
 	if o.State == toState {
-		return nil
+		return custom_error.ErrOrderAlreadyAtState
 	}
 
 	if !o.State.CanTransitionTo(toState) {
@@ -77,4 +77,11 @@ func (o *Order) HasItems() bool {
 
 func (o *Order) Exists() bool {
 	return o.Id != ""
+}
+
+func (o *Order) UpdateTimezone() {
+	loc, _ := time.LoadLocation("America/Sao_Paulo")
+	o.StateUpdatedAt = o.StateUpdatedAt.In(loc)
+	o.CreatedAt = o.CreatedAt.In(loc)
+	o.UpdatedAt = o.UpdatedAt.In(loc)
 }
