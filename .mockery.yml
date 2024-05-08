@@ -28,3 +28,10 @@ packages:
           mockname: "Mock{{.InterfaceName}}"
           outpkg: "mocks"
           include-regex: "(Provider)"
+    github.com/jfelipearaujo-org/ms-production-management/internal/adapter/database:
+        config:
+          filename: "{{ .InterfaceName | snakecase }}_mock.go"
+          dir: "./internal/adapter/database/mocks"
+          mockname: "Mock{{.InterfaceName}}"
+          outpkg: "mocks"
+          include-regex: "(Service)"

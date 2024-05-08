@@ -58,7 +58,7 @@ func TestGetEnvironment(t *testing.T) {
 				Url: "db://host:1234",
 			},
 			CloudConfig: &environment.CloudConfig{
-				OrderProductionTopic: "order_payment",
+				OrderProductionQueue: "order_payment",
 				UpdateOrderTopic:     "update_order",
 				OrderPaymentQueue:    "order_payment",
 				BaseEndpoint:         "http://localhost:4566",
@@ -117,7 +117,7 @@ func TestGetEnvironmentFromFile(t *testing.T) {
 				Url: "db://host:1234",
 			},
 			CloudConfig: &environment.CloudConfig{
-				OrderProductionTopic: "order_payment",
+				OrderProductionQueue: "order_payment",
 				UpdateOrderTopic:     "update_order",
 				OrderPaymentQueue:    "order_payment",
 				BaseEndpoint:         "http://localhost:4566",
