@@ -1,8 +1,10 @@
 package update
 
 import (
+	"log/slog"
 	"net/http"
 
+	"github.com/jfelipearaujo-org/ms-production-management/internal/adapter/cloud"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/service"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/update"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/shared/custom_error"
@@ -10,25 +12,30 @@ import (
 )
 
 type Handler struct {
-	service service.UpdateOrderProductionService[update.UpdateOrderProductionInput]
+	updateOrderProductionService service.UpdateOrderProductionService[update.UpdateOrderProductionInput]
+	updateOrderTopic             cloud.TopicService
 }
 
 func NewHandler(
-	service service.UpdateOrderProductionService[update.UpdateOrderProductionInput],
+	updateOrderProductionService service.UpdateOrderProductionService[update.UpdateOrderProductionInput],
+	updateOrderTopic cloud.TopicService,
 ) *Handler {
-	return &Handler{service: service}
+	return &Handler{
+		updateOrderProductionService: updateOrderProductionService,
+		updateOrderTopic:             updateOrderTopic,
+	}
 }
 
-func (h *Handler) Handle(ctx echo.Context) error {
+func (h *Handler) Handle(c echo.Context) error {
 	var request update.UpdateOrderProductionInput
 
-	if err := ctx.Bind(&request); err != nil {
+	if err := c.Bind(&request); err != nil {
 		return err
 	}
 
-	context := ctx.Request().Context()
+	ctx := c.Request().Context()
 
-	order, err := h.service.Handle(context, request)
+	order, err := h.updateOrderProductionService.Handle(ctx, request)
 	if err != nil {
 		if custom_error.IsBusinessErr(err) {
 			return custom_error.NewHttpAppErrorFromBusinessError(err)
@@ -39,5 +46,14 @@ func (h *Handler) Handle(ctx echo.Context) error {
 
 	order.RefreshStateTitle()
 
-	return ctx.JSON(http.StatusOK, order)
+	messageId, err := h.updateOrderTopic.PublishMessage(ctx, cloud.NewUpdateOrderContractFromPayment(order))
+	if err != nil {
+		slog.ErrorContext(ctx, "error publishing message to update order topic", "error", err)
+	}
+
+	if messageId != nil {
+		slog.InfoContext(ctx, "message published to update order topic", "message_id", *messageId)
+	}
+
+	return c.JSON(http.StatusOK, order)
 }

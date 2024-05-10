@@ -45,6 +45,11 @@ func main() {
 
 	server := server.NewServer(config)
 
+	if err := server.UpdateOrderTopicService.UpdateTopicArn(ctx); err != nil {
+		slog.ErrorContext(ctx, "error updating update order topic url", "error", err)
+		panic(err)
+	}
+
 	if err := server.QueueService.UpdateQueueUrl(ctx); err != nil {
 		slog.Error("error updating queue url", "error", err)
 		panic(err)

@@ -26,9 +26,10 @@ import (
 )
 
 type Server struct {
-	Config          *environment.Config
-	DatabaseService database.DatabaseService
-	QueueService    cloud.QueueService
+	Config                  *environment.Config
+	DatabaseService         database.DatabaseService
+	QueueService            cloud.QueueService
+	UpdateOrderTopicService cloud.TopicService
 
 	Dependency Dependency
 }
@@ -52,10 +53,13 @@ func NewServer(config *environment.Config) *Server {
 
 	createOrderProductionService := create.NewService(orderProductionRepository, timeProvider)
 
+	updateOrderTopicService := cloud.NewUpdateOrderTopicService(config.CloudConfig.UpdateOrderTopic, cloudConfig)
+
 	return &Server{
-		Config:          config,
-		DatabaseService: databaseService,
-		QueueService:    cloud.NewQueueService(config.CloudConfig.OrderProductionQueue, cloudConfig, createOrderProductionService),
+		Config:                  config,
+		DatabaseService:         databaseService,
+		QueueService:            cloud.NewQueueService(config.CloudConfig.OrderProductionQueue, cloudConfig, createOrderProductionService),
+		UpdateOrderTopicService: updateOrderTopicService,
 		Dependency: Dependency{
 			TimeProvider: timeProvider,
 
@@ -64,6 +68,8 @@ func NewServer(config *environment.Config) *Server {
 			GetOrderProductionById:    get_by_id_service.NewService(orderProductionRepository),
 			GetOrderProductionByState: get_by_state_service.NewService(orderProductionRepository),
 			UpdateOrderProduction:     update_service.NewService(orderProductionRepository, timeProvider),
+
+			UpdateOrderTopicService: updateOrderTopicService,
 		},
 	}
 }
@@ -100,7 +106,7 @@ func (server *Server) registerHealthCheck(e *echo.Echo) {
 func (s *Server) registerOrderProductionHandlers(e *echo.Group) {
 	getOrderProductionByIdHandler := get_by_id.NewHandler(s.Dependency.GetOrderProductionById)
 	getOrderProductionByStateHandler := get_by_state.NewHandler(s.Dependency.GetOrderProductionByState)
-	updateOrderProductionHandler := update.NewHandler(s.Dependency.UpdateOrderProduction)
+	updateOrderProductionHandler := update.NewHandler(s.Dependency.UpdateOrderProduction, s.Dependency.UpdateOrderTopicService)
 
 	e.GET("/production/:id", getOrderProductionByIdHandler.Handle)
 	e.GET("/production", getOrderProductionByStateHandler.Handle)
