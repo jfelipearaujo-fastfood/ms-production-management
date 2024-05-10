@@ -13,9 +13,9 @@ GET {{host}}/api/v1/production?state=Received
 Content-Type: application/json
 
 ### Update order production by ID
-PATCH {{host}}/api/v1/production/c3fdab1b-3c06-4db2-9edc-4760a2429460
+PATCH {{host}}/api/v1/production/c3fdab1b-3c06-4db2-9edc-4760a2429462
 Content-Type: application/json
 
 {
-    "state": "Delivered"
+    "state": "Processing"
 }

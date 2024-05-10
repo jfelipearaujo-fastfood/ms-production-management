@@ -6,6 +6,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
+	github.com/aws/aws-sdk-go-v2/service/sns v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.31.4
 	github.com/awsdocs/aws-doc-sdk-examples/gov2/testtools v0.0.0-20240507173630-d83face3f1f1
 	github.com/doug-martin/goqu/v9 v9.19.0

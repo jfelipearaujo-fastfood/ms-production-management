@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/jfelipearaujo-org/ms-production-management/internal/adapter/cloud"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/provider/time_provider"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/repository"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/service"
@@ -17,4 +18,6 @@ type Dependency struct {
 	GetOrderProductionById    service.GetOrderProductionByIdService[get_by_id.GetOrderProductionByIdInput]
 	GetOrderProductionByState service.GetOrderProductionByStateService[get_by_state.GetOrderProductionByStateInput]
 	UpdateOrderProduction     service.UpdateOrderProductionService[update.UpdateOrderProductionInput]
+
+	UpdateOrderTopicService cloud.TopicService
 }
