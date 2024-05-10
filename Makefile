@@ -16,15 +16,15 @@ build: ## Build the application to the output folder (default: ./buil/main)
 	@go build -ldflags="-s -w" -o build/main cmd/api/main.go
 
 build-docker: ## Build a container image and add the version and latest tag
-	@if command -v docker > /dev/null 2>&1 && docker-buildx version > /dev/null 2>&1; then \
+	@if command -v docker > /dev/null 2>&1 && docker buildx version > /dev/null 2>&1; then \
 		echo "Building..."; \
-		docker-buildx build -t jose.araujo/api-transactions:latest -t jose.araujo/api-transactions:$$(git rev-parse --short HEAD) .; \
+		docker buildx build -t jose.araujo/ms-production-management:latest -t jose.araujo/ms-production-management:$$(git rev-parse --short HEAD) .; \
 	else \
 		read -p "Docker Buildx is not installed on your machine. Do you want to install it? [Y/n] " choice; \
 		if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
 			brew install docker-buildx; \
 			echo "Building..."; \
-			docker-buildx build -t jose.araujo/api-transactions:latest -t jose.araujo/api-transactions:$$(git rev-parse --short HEAD) .; \
+			docker-buildx build -t jose.araujo/ms-production-management:latest -t jose.araujo/ms-production-management:$$(git rev-parse --short HEAD) .; \
 		else \
 			echo "You chose not to install Docker Buildx. Exiting..."; \
 			exit 1; \
