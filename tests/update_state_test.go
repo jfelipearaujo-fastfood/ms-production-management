@@ -258,7 +258,7 @@ func createPostgresContainer(ctx context.Context, network *testcontainers.Docker
 					FileMode:          0644,
 				},
 			},
-			WaitingFor: wait.ForLog("PostgreSQL init process complete; ready for start up").WithStartupTimeout(120 * time.Second),
+			WaitingFor: wait.ForLog("ready for start up").WithStartupTimeout(120 * time.Second),
 		},
 		Started: true,
 	})
@@ -276,20 +276,8 @@ func createPostgresContainer(ctx context.Context, network *testcontainers.Docker
 		return nil, ctx, fmt.Errorf("failed to get postgres port: %w", err)
 	}
 
-	connStr := fmt.Sprintf("postgres://production:production@%s:%s/production_db?sslmode=disable", postgresIp, postgresPort.Port())
-
-	conn, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, ctx, fmt.Errorf("failed to connect to postgres: %w", err)
-	}
-	defer conn.Close()
-
-	if err := conn.Ping(); err != nil {
-		return nil, ctx, fmt.Errorf("failed to ping postgres: %w", err)
-	}
-
 	feat := state.retrieve(ctx)
-	feat.ConnStr = connStr
+	feat.ConnStr = fmt.Sprintf("postgres://production:production@%s:%s/production_db?sslmode=disable", postgresIp, postgresPort.Port())
 
 	return container, state.enrich(ctx, feat), nil
 }
