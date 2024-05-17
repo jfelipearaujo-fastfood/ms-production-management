@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ms-production-management-ingress
+  namespace: ns-productions
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /productions
+            pathType: Prefix
+            backend:
+              service:
+                name: ms-production-management
+                port:
+                  number: 8080
