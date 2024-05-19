@@ -56,9 +56,14 @@ func NewServer(config *environment.Config) *Server {
 	updateOrderTopicService := cloud.NewUpdateOrderTopicService(config.CloudConfig.UpdateOrderTopic, cloudConfig)
 
 	return &Server{
-		Config:                  config,
-		DatabaseService:         databaseService,
-		QueueService:            cloud.NewQueueService(config.CloudConfig.OrderProductionQueue, cloudConfig, createOrderProductionService),
+		Config:          config,
+		DatabaseService: databaseService,
+		QueueService: cloud.NewQueueService(
+			config.CloudConfig.OrderProductionQueue,
+			cloudConfig,
+			createOrderProductionService,
+			updateOrderTopicService,
+		),
 		UpdateOrderTopicService: updateOrderTopicService,
 		Dependency: Dependency{
 			TimeProvider: timeProvider,
