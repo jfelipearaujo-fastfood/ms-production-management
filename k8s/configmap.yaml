@@ -10,5 +10,7 @@ data:
   API_ENV_NAME: production
   API_VERSION: v1
   DB_NAME: productions
+  DB_URL: todo
+  DB_URL_SECRET_NAME: db-productions-url-secret
   AWS_ORDER_PRODUCTION_QUEUE_NAME: OrderProductionQueue
   AWS_UPDATE_ORDER_TOPIC_NAME: UpdateOrderTopic

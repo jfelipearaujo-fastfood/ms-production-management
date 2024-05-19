@@ -91,15 +91,30 @@ func (s *AwsSqsService) processMessage(ctx context.Context, message types.Messag
 
 	slog.InfoContext(ctx, "message received", "message_id", *message.MessageId)
 
-	var request create.CreateOrderProductionInput
+	var notification TopicNotification
 
-	err := json.Unmarshal([]byte(*message.Body), &request)
+	err := json.Unmarshal([]byte(*message.Body), &notification)
 	if err != nil {
 		slog.ErrorContext(ctx, "error unmarshalling message", "message_id", *message.MessageId, "error", err)
 	}
 
-	if _, err := s.MessageProcessor.Handle(ctx, request); err != nil {
-		slog.ErrorContext(ctx, "error processing message", "message_id", *message.MessageId, "error", err)
+	if notification.Type != "Notification" {
+		slog.ErrorContext(ctx, "invalid notification type", "message_id", *message.MessageId, "type", notification.Type)
+		return
+	}
+
+	var request create.CreateOrderProductionInput
+
+	err = json.Unmarshal([]byte(notification.Message), &request)
+	if err != nil {
+		slog.ErrorContext(ctx, "error unmarshalling message", "message_id", *message.MessageId, "error", err)
+	}
+
+	if err == nil {
+		slog.InfoContext(ctx, "message unmarshalled", "request", request)
+		if _, err := s.MessageProcessor.Handle(ctx, request); err != nil {
+			slog.ErrorContext(ctx, "error processing message", "message_id", *message.MessageId, "error", err)
+		}
 	}
 
 	if err := s.deleteMessage(ctx, message); err != nil {
