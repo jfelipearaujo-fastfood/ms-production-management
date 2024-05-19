@@ -398,9 +398,21 @@ func TestGetByState(t *testing.T) {
 			now,
 		)
 
+		orderItem := order_entity.NewItem(
+			uuid.NewString(),
+			"Item",
+			1,
+		)
+		err = expectedOrder.AddItem(orderItem, now)
+		assert.NoError(t, err)
+
 		mock.ExpectQuery("SELECT (.+)?orders(.+)?").
 			WillReturnRows(sqlmock.NewRows([]string{"id", "state", "state_updated_at", "created_at", "updated_at"}).
 				AddRow(expectedOrder.Id, expectedOrder.State, expectedOrder.StateUpdatedAt, expectedOrder.CreatedAt, expectedOrder.UpdatedAt))
+
+		mock.ExpectQuery("SELECT (.+)?order_items(.+)?").
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "quantity"}).
+				AddRow(orderItem.Id, orderItem.Name, orderItem.Quantity))
 
 		repo := NewOrderProductionRepository(db)
 

@@ -166,16 +166,16 @@ func (r *OrderProductionRepository) GetByState(ctx context.Context, state order_
 		return orders, err
 	}
 
-	statement, err := r.conn.QueryContext(ctx, sql, params...)
+	orderStatement, err := r.conn.QueryContext(ctx, sql, params...)
 	if err != nil {
 		return orders, err
 	}
-	defer statement.Close()
+	defer orderStatement.Close()
 
-	for statement.Next() {
+	for orderStatement.Next() {
 		var order order_entity.Order
 
-		if err := statement.Scan(
+		if err := orderStatement.Scan(
 			&order.Id,
 			&order.State,
 			&order.StateUpdatedAt,
@@ -183,6 +183,37 @@ func (r *OrderProductionRepository) GetByState(ctx context.Context, state order_
 			&order.UpdatedAt,
 		); err != nil {
 			return orders, err
+		}
+
+		sql, params, err := goqu.
+			From("order_items").
+			Select("id", "name", "quantity").
+			Where(goqu.C("order_id").Eq(order.Id)).
+			ToSQL()
+		if err != nil {
+			return orders, err
+		}
+
+		order.Items = make([]order_entity.Item, 0)
+
+		orderItemsStatement, err := r.conn.QueryContext(ctx, sql, params...)
+		if err != nil {
+			return orders, err
+		}
+		defer orderItemsStatement.Close()
+
+		for orderItemsStatement.Next() {
+			var item order_entity.Item
+
+			if err := orderItemsStatement.Scan(
+				&item.Id,
+				&item.Name,
+				&item.Quantity,
+			); err != nil {
+				return orders, err
+			}
+
+			order.Items = append(order.Items, item)
 		}
 
 		order.UpdateTimezone()
