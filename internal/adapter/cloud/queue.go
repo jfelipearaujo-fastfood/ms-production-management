@@ -24,7 +24,8 @@ type AwsSqsService struct {
 	QueueUrl  string
 	Client    *sqs.Client
 
-	MessageProcessor service.CreateOrderProductionService[create.CreateOrderProductionInput]
+	MessageProcessor        service.CreateOrderProductionService[create.CreateOrderProductionInput]
+	UpdateOrderTopicService TopicService
 
 	ChanMessage chan types.Message
 
@@ -32,14 +33,20 @@ type AwsSqsService struct {
 	WaitGroup sync.WaitGroup
 }
 
-func NewQueueService(queueName string, config aws.Config, messageProcessor service.CreateOrderProductionService[create.CreateOrderProductionInput]) QueueService {
+func NewQueueService(
+	queueName string,
+	config aws.Config,
+	messageProcessor service.CreateOrderProductionService[create.CreateOrderProductionInput],
+	updateOrderTopicService TopicService,
+) QueueService {
 	client := sqs.NewFromConfig(config)
 
 	return &AwsSqsService{
 		QueueName: queueName,
 		Client:    client,
 
-		MessageProcessor: messageProcessor,
+		MessageProcessor:        messageProcessor,
+		UpdateOrderTopicService: updateOrderTopicService,
 
 		ChanMessage: make(chan types.Message, 10),
 
@@ -91,15 +98,42 @@ func (s *AwsSqsService) processMessage(ctx context.Context, message types.Messag
 
 	slog.InfoContext(ctx, "message received", "message_id", *message.MessageId)
 
-	var request create.CreateOrderProductionInput
+	var notification TopicNotification
 
-	err := json.Unmarshal([]byte(*message.Body), &request)
+	err := json.Unmarshal([]byte(*message.Body), &notification)
 	if err != nil {
 		slog.ErrorContext(ctx, "error unmarshalling message", "message_id", *message.MessageId, "error", err)
 	}
 
-	if _, err := s.MessageProcessor.Handle(ctx, request); err != nil {
-		slog.ErrorContext(ctx, "error processing message", "message_id", *message.MessageId, "error", err)
+	if notification.Type != "Notification" {
+		slog.ErrorContext(ctx, "invalid notification type", "message_id", *message.MessageId, "type", notification.Type)
+		return
+	}
+
+	var request create.CreateOrderProductionInput
+
+	err = json.Unmarshal([]byte(notification.Message), &request)
+	if err != nil {
+		slog.ErrorContext(ctx, "error unmarshalling message", "message_id", *message.MessageId, "error", err)
+	}
+
+	if err == nil {
+		slog.InfoContext(ctx, "message unmarshalled", "request", request)
+		order, err := s.MessageProcessor.Handle(ctx, request)
+		if err != nil {
+			slog.ErrorContext(ctx, "error processing message", "message_id", *message.MessageId, "error", err)
+		}
+
+		if order != nil {
+			messageId, err := s.UpdateOrderTopicService.PublishMessage(ctx, NewUpdateOrderContractFromPayment(order))
+			if err != nil {
+				slog.ErrorContext(ctx, "error publishing message to update order topic", "error", err)
+			}
+
+			if messageId != nil {
+				slog.InfoContext(ctx, "message published to update order topic", "message_id", *messageId)
+			}
+		}
 	}
 
 	if err := s.deleteMessage(ctx, message); err != nil {

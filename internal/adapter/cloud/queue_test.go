@@ -9,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/awsdocs/aws-doc-sdk-examples/gov2/testtools"
-	"github.com/jfelipearaujo-org/ms-production-management/internal/service/mocks"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/adapter/cloud/mocks"
+	service_mocks "github.com/jfelipearaujo-org/ms-production-management/internal/service/mocks"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/create"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -18,9 +19,10 @@ import (
 func TestGetQueueName(t *testing.T) {
 	t.Run("Should return queue name", func(t *testing.T) {
 		// Arrange
-		fakeProcessor := mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		fakeProcessor := service_mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		updateOrderTopic := mocks.NewMockTopicService(t)
 
-		service := NewQueueService("test-queue", aws.Config{}, fakeProcessor)
+		service := NewQueueService("test-queue", aws.Config{}, fakeProcessor, updateOrderTopic)
 
 		// Act
 		queueName := service.GetQueueName()
@@ -46,9 +48,10 @@ func TestUpdateQueueUrl(t *testing.T) {
 			},
 		})
 
-		fakeProcessor := mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		fakeProcessor := service_mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		updateOrderTopic := mocks.NewMockTopicService(t)
 
-		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor)
+		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor, updateOrderTopic)
 
 		// Act
 		err := service.UpdateQueueUrl(ctx)
@@ -70,9 +73,10 @@ func TestUpdateQueueUrl(t *testing.T) {
 			Error:         raiseErr,
 		})
 
-		fakeProcessor := mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		fakeProcessor := service_mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		updateOrderTopic := mocks.NewMockTopicService(t)
 
-		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor)
+		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor, updateOrderTopic)
 
 		// Act
 		err := service.UpdateQueueUrl(ctx)
@@ -100,14 +104,15 @@ func TestStartConsuming(t *testing.T) {
 		})
 
 		response := `{
-			"order_id": "c3fdab1b-3c06-4db2-9edc-4760a2429460",
-			"items": [
-				{
-					"id": "cfdab175-1f86-4fb0-9bcb-15f2c58df30c",
-					"name": "Hamburger",
-					"quantity": 1
-				}
-			]
+			"Type" : "Notification",
+			"MessageId" : "fc8e9ffd-6122-5c52-8fb9-c13e3ee2629a",
+			"TopicArn" : "arn:aws:sns:us-east-1:000000000000:OrderPaymentTopic",
+			"Message" : "{\"order_id\":\"c3fdab1b-3c06-4db2-9edc-4760a2429462\",\"items\":[{\"id\": \"cfdab175-1f86-4fb0-9bcb-15f2c58df30c\",\"name\": \"Hamburger\",\"quantity\": 1}]}",
+			"Timestamp" : "2024-05-19T02:01:36.927Z",
+			"SignatureVersion" : "1",
+			"Signature" : "e2Jex1vYJslu5gc0YPvaoprA6Vnbus7VuaQOjKVoegQ8i+5yqtWD47Zl7+O5mh/vLOEcNKkXKVNDk++idzRxEg40uZQcWOwDewqaItZvD2XH6b/mqYAnf4QjAjIF3+orXpSZQn/hatp7KzsYvd7bnPmO3YyzuqwD4t4Zz19GvatIuYsjDkcueWXX5/HOJJhAGSQFg/hnETAnllWZuDAgwDOUF6sPfa7zSUGSyj2ymHlSyMPNOLmM5VMpouujU0lFwYlZqHwg3WbEONRHyZ7Fs6JO8wPRG1J3kUvjcZ7qQwo4ARGTIbXZ7xJv9mYjE79Sdl3S5yXkvg4CambuE9Gpig==",
+			"SigningCertURL" : "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-60eadc530605d63b8e62a523676ef735.pem",
+			"UnsubscribeURL" : "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:000000000000:OrderPaymentTopic:961e369d-aee9-40d8-ab2e-4c6a5e2eab95"
 		}`
 
 		stubber.Add(testtools.Stub{
@@ -120,7 +125,7 @@ func TestStartConsuming(t *testing.T) {
 			Output: &sqs.ReceiveMessageOutput{
 				Messages: []types.Message{
 					{
-						MessageId:     aws.String("123"),
+						MessageId:     aws.String("fc8e9ffd-6122-5c52-8fb9-c13e3ee2629a"),
 						Body:          aws.String(response),
 						ReceiptHandle: aws.String("1234567891"),
 					},
@@ -151,13 +156,14 @@ func TestStartConsuming(t *testing.T) {
 			Output: &sqs.DeleteMessageOutput{},
 		})
 
-		fakeProcessor := mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		fakeProcessor := service_mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		updateOrderTopic := mocks.NewMockTopicService(t)
 
 		fakeProcessor.On("Handle", ctx, mock.Anything).
 			Return(nil, nil).
 			Times(2)
 
-		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor)
+		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor, updateOrderTopic)
 
 		err := service.UpdateQueueUrl(ctx)
 		assert.NoError(t, err)
@@ -197,9 +203,10 @@ func TestStartConsuming(t *testing.T) {
 			Error: raiseErr,
 		})
 
-		fakeProcessor := mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		fakeProcessor := service_mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		updateOrderTopic := mocks.NewMockTopicService(t)
 
-		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor)
+		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor, updateOrderTopic)
 
 		err := service.UpdateQueueUrl(ctx)
 		assert.NoError(t, err)
@@ -228,14 +235,15 @@ func TestStartConsuming(t *testing.T) {
 		})
 
 		response := `{
-			"order_id": "c3fdab1b-3c06-4db2-9edc-4760a2429460",
-			"items": [
-				{
-					"id": "cfdab175-1f86-4fb0-9bcb-15f2c58df30c",
-					"name": "Hamburger",
-					"quantity": "err-quantity"
-				}
-			]
+			"Type" : "Notification",
+			"MessageId" : "fc8e9ffd-6122-5c52-8fb9-c13e3ee2629a",
+			"TopicArn" : "arn:aws:sns:us-east-1:000000000000:OrderPaymentTopic",
+			"Message" : "{\"order_id\":\"c3fdab1b-3c06-4db2-9edc-4760a2429462\",\"items\":[{\"id\": \"cfdab175-1f86-4fb0-9bcb-15f2c58df30c\",\"name\": \"Hamburger\",\"quantity\": 1}]}",
+			"Timestamp" : "2024-05-19T02:01:36.927Z",
+			"SignatureVersion" : "1",
+			"Signature" : "e2Jex1vYJslu5gc0YPvaoprA6Vnbus7VuaQOjKVoegQ8i+5yqtWD47Zl7+O5mh/vLOEcNKkXKVNDk++idzRxEg40uZQcWOwDewqaItZvD2XH6b/mqYAnf4QjAjIF3+orXpSZQn/hatp7KzsYvd7bnPmO3YyzuqwD4t4Zz19GvatIuYsjDkcueWXX5/HOJJhAGSQFg/hnETAnllWZuDAgwDOUF6sPfa7zSUGSyj2ymHlSyMPNOLmM5VMpouujU0lFwYlZqHwg3WbEONRHyZ7Fs6JO8wPRG1J3kUvjcZ7qQwo4ARGTIbXZ7xJv9mYjE79Sdl3S5yXkvg4CambuE9Gpig==",
+			"SigningCertURL" : "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-60eadc530605d63b8e62a523676ef735.pem",
+			"UnsubscribeURL" : "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:000000000000:OrderPaymentTopic:961e369d-aee9-40d8-ab2e-4c6a5e2eab95"
 		}`
 
 		stubber.Add(testtools.Stub{
@@ -279,13 +287,14 @@ func TestStartConsuming(t *testing.T) {
 			Output: &sqs.DeleteMessageOutput{},
 		})
 
-		fakeProcessor := mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		fakeProcessor := service_mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		updateOrderTopic := mocks.NewMockTopicService(t)
 
 		fakeProcessor.On("Handle", ctx, mock.Anything).
 			Return(nil, nil).
 			Times(2)
 
-		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor)
+		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor, updateOrderTopic)
 
 		err := service.UpdateQueueUrl(ctx)
 		assert.NoError(t, err)
@@ -314,14 +323,15 @@ func TestStartConsuming(t *testing.T) {
 		})
 
 		response := `{
-			"order_id": "c3fdab1b-3c06-4db2-9edc-4760a2429460",
-			"items": [
-				{
-					"id": "cfdab175-1f86-4fb0-9bcb-15f2c58df30c",
-					"name": "Hamburger",
-					"quantity": 1
-				}
-			]
+			"Type" : "Notification",
+			"MessageId" : "fc8e9ffd-6122-5c52-8fb9-c13e3ee2629a",
+			"TopicArn" : "arn:aws:sns:us-east-1:000000000000:OrderPaymentTopic",
+			"Message" : "{\"order_id\":\"c3fdab1b-3c06-4db2-9edc-4760a2429462\",\"items\":[{\"id\": \"cfdab175-1f86-4fb0-9bcb-15f2c58df30c\",\"name\": \"Hamburger\",\"quantity\": 1}]}",
+			"Timestamp" : "2024-05-19T02:01:36.927Z",
+			"SignatureVersion" : "1",
+			"Signature" : "e2Jex1vYJslu5gc0YPvaoprA6Vnbus7VuaQOjKVoegQ8i+5yqtWD47Zl7+O5mh/vLOEcNKkXKVNDk++idzRxEg40uZQcWOwDewqaItZvD2XH6b/mqYAnf4QjAjIF3+orXpSZQn/hatp7KzsYvd7bnPmO3YyzuqwD4t4Zz19GvatIuYsjDkcueWXX5/HOJJhAGSQFg/hnETAnllWZuDAgwDOUF6sPfa7zSUGSyj2ymHlSyMPNOLmM5VMpouujU0lFwYlZqHwg3WbEONRHyZ7Fs6JO8wPRG1J3kUvjcZ7qQwo4ARGTIbXZ7xJv9mYjE79Sdl3S5yXkvg4CambuE9Gpig==",
+			"SigningCertURL" : "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-60eadc530605d63b8e62a523676ef735.pem",
+			"UnsubscribeURL" : "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:000000000000:OrderPaymentTopic:961e369d-aee9-40d8-ab2e-4c6a5e2eab95"
 		}`
 
 		stubber.Add(testtools.Stub{
@@ -365,13 +375,14 @@ func TestStartConsuming(t *testing.T) {
 			Output: &sqs.DeleteMessageOutput{},
 		})
 
-		fakeProcessor := mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		fakeProcessor := service_mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		updateOrderTopic := mocks.NewMockTopicService(t)
 
 		fakeProcessor.On("Handle", ctx, mock.Anything).
 			Return(nil, assert.AnError).
 			Times(2)
 
-		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor)
+		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor, updateOrderTopic)
 
 		err := service.UpdateQueueUrl(ctx)
 		assert.NoError(t, err)
@@ -402,14 +413,15 @@ func TestStartConsuming(t *testing.T) {
 		})
 
 		response := `{
-			"order_id": "c3fdab1b-3c06-4db2-9edc-4760a2429460",
-			"items": [
-				{
-					"id": "cfdab175-1f86-4fb0-9bcb-15f2c58df30c",
-					"name": "Hamburger",
-					"quantity": 1
-				}
-			]
+			"Type" : "Notification",
+			"MessageId" : "fc8e9ffd-6122-5c52-8fb9-c13e3ee2629a",
+			"TopicArn" : "arn:aws:sns:us-east-1:000000000000:OrderPaymentTopic",
+			"Message" : "{\"order_id\":\"c3fdab1b-3c06-4db2-9edc-4760a2429462\",\"items\":[{\"id\": \"cfdab175-1f86-4fb0-9bcb-15f2c58df30c\",\"name\": \"Hamburger\",\"quantity\": 1}]}",
+			"Timestamp" : "2024-05-19T02:01:36.927Z",
+			"SignatureVersion" : "1",
+			"Signature" : "e2Jex1vYJslu5gc0YPvaoprA6Vnbus7VuaQOjKVoegQ8i+5yqtWD47Zl7+O5mh/vLOEcNKkXKVNDk++idzRxEg40uZQcWOwDewqaItZvD2XH6b/mqYAnf4QjAjIF3+orXpSZQn/hatp7KzsYvd7bnPmO3YyzuqwD4t4Zz19GvatIuYsjDkcueWXX5/HOJJhAGSQFg/hnETAnllWZuDAgwDOUF6sPfa7zSUGSyj2ymHlSyMPNOLmM5VMpouujU0lFwYlZqHwg3WbEONRHyZ7Fs6JO8wPRG1J3kUvjcZ7qQwo4ARGTIbXZ7xJv9mYjE79Sdl3S5yXkvg4CambuE9Gpig==",
+			"SigningCertURL" : "https://sns.us-east-1.amazonaws.com/SimpleNotificationService-60eadc530605d63b8e62a523676ef735.pem",
+			"UnsubscribeURL" : "https://sns.us-east-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-east-1:000000000000:OrderPaymentTopic:961e369d-aee9-40d8-ab2e-4c6a5e2eab95"
 		}`
 
 		stubber.Add(testtools.Stub{
@@ -439,13 +451,14 @@ func TestStartConsuming(t *testing.T) {
 			Error: raiseErr,
 		})
 
-		fakeProcessor := mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		fakeProcessor := service_mocks.NewMockCreateOrderProductionService[create.CreateOrderProductionInput](t)
+		updateOrderTopic := mocks.NewMockTopicService(t)
 
 		fakeProcessor.On("Handle", ctx, mock.Anything).
 			Return(nil, nil).
 			Once()
 
-		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor)
+		service := NewQueueService("test-queue", *stubber.SdkConfig, fakeProcessor, updateOrderTopic)
 
 		err := service.UpdateQueueUrl(ctx)
 		assert.NoError(t, err)

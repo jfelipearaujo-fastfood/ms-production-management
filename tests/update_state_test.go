@@ -293,12 +293,22 @@ func createLocalstackContainer(ctx context.Context, network *testcontainers.Dock
 		return nil, ctx, err
 	}
 
+	smScript, err := filepath.Abs(filepath.Join(".", "testdata", "init-sm.sh"))
+	if err != nil {
+		return nil, ctx, err
+	}
+
 	snsScriptReader, err := os.Open(snsScript)
 	if err != nil {
 		return nil, ctx, err
 	}
 
 	sqsScriptReader, err := os.Open(sqsScript)
+	if err != nil {
+		return nil, ctx, err
+	}
+
+	smScriptReader, err := os.Open(smScript)
 	if err != nil {
 		return nil, ctx, err
 	}
@@ -310,7 +320,7 @@ func createLocalstackContainer(ctx context.Context, network *testcontainers.Dock
 				"4566",
 			},
 			Env: map[string]string{
-				"SERVICES":       "sqs,sns",
+				"SERVICES":       "secretsmanager,sqs,sns",
 				"DEFAULT_REGION": "us-east-1",
 				"DOCKER_HOST":    "unix:///var/run/docker.sock",
 			},
@@ -331,6 +341,11 @@ func createLocalstackContainer(ctx context.Context, network *testcontainers.Dock
 				{
 					Reader:            sqsScriptReader,
 					ContainerFilePath: "/etc/localstack/init/ready.d/init-sqs.sh",
+					FileMode:          0777,
+				},
+				{
+					Reader:            smScriptReader,
+					ContainerFilePath: "/etc/localstack/init/ready.d/init-sm.sh",
 					FileMode:          0777,
 				},
 			},
@@ -361,7 +376,8 @@ func createApiContainer(ctx context.Context, network *testcontainers.DockerNetwo
 				"API_PORT":                        "8080",
 				"API_ENV_NAME":                    "development",
 				"API_VERSION":                     "v1",
-				"DB_URL":                          "postgres://production:production@test:5432/production_db?sslmode=disable",
+				"DB_URL":                          "todo",
+				"DB_URL_SECRET_NAME":              "db-secret-url",
 				"AWS_ACCESS_KEY_ID":               "test",
 				"AWS_SECRET_ACCESS_KEY":           "test",
 				"AWS_REGION":                      "us-east-1",

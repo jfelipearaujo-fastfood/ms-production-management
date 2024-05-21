@@ -21,6 +21,7 @@ import (
 	get_by_id_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_id"
 	get_by_state_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_state"
 	update_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/update"
+	"github.com/jfelipearaujo-org/ms-production-management/internal/shared/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -56,9 +57,14 @@ func NewServer(config *environment.Config) *Server {
 	updateOrderTopicService := cloud.NewUpdateOrderTopicService(config.CloudConfig.UpdateOrderTopic, cloudConfig)
 
 	return &Server{
-		Config:                  config,
-		DatabaseService:         databaseService,
-		QueueService:            cloud.NewQueueService(config.CloudConfig.OrderProductionQueue, cloudConfig, createOrderProductionService),
+		Config:          config,
+		DatabaseService: databaseService,
+		QueueService: cloud.NewQueueService(
+			config.CloudConfig.OrderProductionQueue,
+			cloudConfig,
+			createOrderProductionService,
+			updateOrderTopicService,
+		),
 		UpdateOrderTopicService: updateOrderTopicService,
 		Dependency: Dependency{
 			TimeProvider: timeProvider,
@@ -86,6 +92,7 @@ func (s *Server) GetHttpServer() *http.Server {
 
 func (s *Server) RegisterRoutes() http.Handler {
 	e := echo.New()
+	e.Use(logger.Middleware())
 	e.Use(middleware.Recover())
 
 	s.registerHealthCheck(e)
