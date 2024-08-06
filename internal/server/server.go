@@ -17,6 +17,7 @@ import (
 	"github.com/jfelipearaujo-org/ms-production-management/internal/handler/update"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/provider/time_provider"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/repository/order_production"
+	token "github.com/jfelipearaujo-org/ms-production-management/internal/server/middlewares"
 	"github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/create"
 	get_by_id_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_id"
 	get_by_state_service "github.com/jfelipearaujo-org/ms-production-management/internal/service/order_production/get_by_state"
@@ -115,6 +116,7 @@ func (s *Server) registerOrderProductionHandlers(e *echo.Group) {
 	getOrderProductionByStateHandler := get_by_state.NewHandler(s.Dependency.GetOrderProductionByState)
 	updateOrderProductionHandler := update.NewHandler(s.Dependency.UpdateOrderProduction, s.Dependency.UpdateOrderTopicService)
 
+	e.Use(token.Middleware())
 	e.GET("/production/:id", getOrderProductionByIdHandler.Handle)
 	e.GET("/production", getOrderProductionByStateHandler.Handle)
 	e.PATCH("/production/:id", updateOrderProductionHandler.Handle)

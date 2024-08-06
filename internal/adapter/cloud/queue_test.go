@@ -120,7 +120,7 @@ func TestStartConsuming(t *testing.T) {
 			Input: &sqs.ReceiveMessageInput{
 				QueueUrl:            aws.String("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"),
 				MaxNumberOfMessages: 10,
-				WaitTimeSeconds:     5,
+				WaitTimeSeconds:     20,
 			},
 			Output: &sqs.ReceiveMessageOutput{
 				Messages: []types.Message{
@@ -198,7 +198,7 @@ func TestStartConsuming(t *testing.T) {
 			Input: &sqs.ReceiveMessageInput{
 				QueueUrl:            aws.String("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"),
 				MaxNumberOfMessages: 10,
-				WaitTimeSeconds:     5,
+				WaitTimeSeconds:     20,
 			},
 			Error: raiseErr,
 		})
@@ -251,7 +251,7 @@ func TestStartConsuming(t *testing.T) {
 			Input: &sqs.ReceiveMessageInput{
 				QueueUrl:            aws.String("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"),
 				MaxNumberOfMessages: 10,
-				WaitTimeSeconds:     5,
+				WaitTimeSeconds:     20,
 			},
 			Output: &sqs.ReceiveMessageOutput{
 				Messages: []types.Message{
@@ -339,7 +339,7 @@ func TestStartConsuming(t *testing.T) {
 			Input: &sqs.ReceiveMessageInput{
 				QueueUrl:            aws.String("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"),
 				MaxNumberOfMessages: 10,
-				WaitTimeSeconds:     5,
+				WaitTimeSeconds:     20,
 			},
 			Output: &sqs.ReceiveMessageOutput{
 				Messages: []types.Message{
@@ -429,7 +429,7 @@ func TestStartConsuming(t *testing.T) {
 			Input: &sqs.ReceiveMessageInput{
 				QueueUrl:            aws.String("https://sqs.us-east-1.amazonaws.com/123456789012/test-queue"),
 				MaxNumberOfMessages: 10,
-				WaitTimeSeconds:     5,
+				WaitTimeSeconds:     20,
 			},
 			Output: &sqs.ReceiveMessageOutput{
 				Messages: []types.Message{
