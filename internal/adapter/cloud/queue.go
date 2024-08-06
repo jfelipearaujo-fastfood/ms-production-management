@@ -76,7 +76,7 @@ func (s *AwsSqsService) ConsumeMessages(ctx context.Context) {
 	output, err := s.Client.ReceiveMessage(ctx, &sqs.ReceiveMessageInput{
 		QueueUrl:            &s.QueueUrl,
 		MaxNumberOfMessages: 10,
-		WaitTimeSeconds:     5,
+		WaitTimeSeconds:     20,
 	})
 	if err != nil {
 		slog.ErrorContext(ctx, "error receiving message from queue", "queue_url", s.QueueUrl, "error", err)
