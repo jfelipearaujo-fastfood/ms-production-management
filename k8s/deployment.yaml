@@ -18,6 +18,7 @@ spec:
       labels:
         app: ms-production-management
     spec:
+      automountServiceAccountToken: false
       serviceAccountName: sa-productions
       containers:
         - name: ms-production-management
